@@ -20,51 +20,12 @@ enum Turn {
     White,
 }
 
-fn check_putable(field: &[[Masu; 8]; 8], point: &(usize, usize), turn: &Turn) -> bool {
-    if field[point.0][point.1] != Masu::Empty {
-        return false;
-    }
-    let direction = [
-        (-1, -1),
-        (-1, 0),
-        (-1, 1),
-        (0, -1),
-        (0, 1),
-        (1, -1),
-        (1, 0),
-        (1, 1),
-    ];
-    let check_color = match turn {
-        Turn::Black => Masu::Black,
-        Turn::White => Masu::White,
-    };
-    for i in 0..direction.len() {
-        let mut count = 0;
-        let count = loop {
-            count += 1;
-            let x = point.0 as isize + direction[i].0 * count;
-            if x < 0 || 8 <= x {
-                break 0;
-            }
-            let y = point.1 as isize + direction[i].1 * count;
-            if y < 0 || 8 <= y {
-                break 0;
-            }
-            if field[x as usize][y as usize] == Masu::Empty {
-                break 0;
-            }
-            if field[x as usize][y as usize] == check_color {
-                break count;
-            }
-        };
-        if count > 1 {
-            return true;
-        }
-    }
-    return false;
-}
-
-fn auto_reverse(field: &mut [[Masu; 8]; 8], point: (usize, usize)) {
+fn get_reversable(
+    field: &[[Masu; 8]; 8],
+    point: &(usize, usize),
+    color: &Masu,
+) -> Vec<(usize, usize)> {
+    let mut result: Vec<(usize, usize)> = vec![];
     let direction = [
         (-1, -1),
         (-1, 0),
@@ -90,16 +51,37 @@ fn auto_reverse(field: &mut [[Masu; 8]; 8], point: (usize, usize)) {
             if field[x as usize][y as usize] == Masu::Empty {
                 break 0;
             }
-            if field[x as usize][y as usize] == field[point.0][point.1] {
+            if field[x as usize][y as usize] == *color {
                 break count;
             }
         };
         for j in 1..count {
             let x = point.0 as isize + direction[i].0 * j;
             let y = point.1 as isize + direction[i].1 * j;
-            field[x as usize][y as usize] = field[point.0][point.1]
+            result.push((x as usize, y as usize));
         }
     }
+    return result;
+}
+
+fn check_putable(field: &[[Masu; 8]; 8], point: &(usize, usize), turn: &Turn) -> bool {
+    if field[point.0][point.1] != Masu::Empty {
+        return false;
+    }
+    let check_color = match turn {
+        Turn::Black => Masu::Black,
+        Turn::White => Masu::White,
+    };
+    if get_reversable(field, point, &check_color).len() == 0 {
+        return false;
+    }
+    return true;
+}
+
+fn auto_reverse(field: &mut [[Masu; 8]; 8], point: (usize, usize)) {
+    get_reversable(field, &point, &field[point.0][point.1])
+        .into_iter()
+        .for_each(|x| field[x.0][x.1] = field[point.0][point.1]);
 }
 
 fn input(
