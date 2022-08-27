@@ -112,10 +112,18 @@ fn view<T: std::io::Write>(
     return Ok(());
 }
 
+fn init_field(field: &mut [[Masu; 8]; 8]) {
+    field[3][3] = Masu::Black;
+    field[4][4] = Masu::Black;
+    field[3][4] = Masu::White;
+    field[4][3] = Masu::White;
+}
+
 fn main() -> Result<()> {
     let mut field = [[Masu::Empty; 8]; 8];
     let mut cursor = (0, 0);
     let mut end = false;
+    init_field(&mut field);
     enable_raw_mode()?;
     execute!(std::io::stderr(), Hide, EnterAlternateScreen)?;
     while !end {
@@ -184,5 +192,14 @@ mod tests {
         let mut f = File::open("testdata/initview").unwrap();
         f.read_to_end(&mut assert_buf).unwrap();
         assert!(buf == assert_buf);
+    }
+    #[test]
+    fn init_field_test() {
+        let mut field = [[Masu::Empty; 8]; 8];
+        init_field(&mut field);
+        assert!(field[3][3] == Masu::Black);
+        assert!(field[4][4] == Masu::Black);
+        assert!(field[3][4] == Masu::White);
+        assert!(field[4][3] == Masu::White);
     }
 }
