@@ -88,7 +88,11 @@ fn view<T: std::io::Write>(
             if i == cursor.0 && j == cursor.1 {
                 execute!(output, SetBackgroundColor(Color::Grey))?;
             } else {
-                execute!(output, SetBackgroundColor(Color::DarkGreen))?;
+                if (i + j) % 2 == 0 {
+                    execute!(output, SetBackgroundColor(Color::DarkGreen))?;
+                } else {
+                    execute!(output, SetBackgroundColor(Color::Green))?;
+                }
             }
             match field[i][j] {
                 Masu::Empty => {
