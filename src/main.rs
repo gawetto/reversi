@@ -14,6 +14,44 @@ enum Masu {
     White,
 }
 
+fn auto_reverse(field: &mut [[Masu; 8]; 8], point: (usize, usize)) {
+    let direction = [
+        (-1, -1),
+        (-1, 0),
+        (-1, 1),
+        (0, -1),
+        (0, 1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+    ];
+    for i in 0..direction.len() {
+        let mut count = 0;
+        let count = loop {
+            count += 1;
+            let x = point.0 as isize + direction[i].0 * count;
+            if x < 0 || 8 <= x {
+                break 0;
+            }
+            let y = point.1 as isize + direction[i].1 * count;
+            if y < 0 || 8 <= y {
+                break 0;
+            }
+            if field[x as usize][y as usize] == Masu::Empty {
+                break 0;
+            }
+            if field[x as usize][y as usize] == field[point.0][point.1] {
+                break count;
+            }
+        };
+        for j in 1..count {
+            let x = point.0 as isize + direction[i].0 * j;
+            let y = point.1 as isize + direction[i].1 * j;
+            field[x as usize][y as usize] = field[point.0][point.1]
+        }
+    }
+}
+
 fn input(
     event: Event,
     field: &mut [[Masu; 8]; 8],
@@ -60,12 +98,14 @@ fn input(
             ..
         }) => {
             field[cursor.0][cursor.1] = Masu::White;
+            auto_reverse(field, *cursor)
         }
         Event::Key(KeyEvent {
             code: KeyCode::Char('b'),
             ..
         }) => {
             field[cursor.0][cursor.1] = Masu::Black;
+            auto_reverse(field, *cursor)
         }
         Event::Key(KeyEvent {
             code: KeyCode::Backspace,
@@ -201,5 +241,14 @@ mod tests {
         assert!(field[4][4] == Masu::Black);
         assert!(field[3][4] == Masu::White);
         assert!(field[4][3] == Masu::White);
+    }
+    #[test]
+    fn auto_reverse_test() {
+        let mut field = [[Masu::Empty; 8]; 8];
+        field[3][3] = Masu::Black;
+        field[3][4] = Masu::White;
+        field[3][5] = Masu::Black;
+        auto_reverse(&mut field, (3, 5));
+        assert!(field[3][4] == Masu::Black);
     }
 }
