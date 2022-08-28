@@ -166,6 +166,10 @@ fn input(
             ..
         }) => *turn = get_another_color(*turn),
         Event::Key(KeyEvent {
+            code: KeyCode::Char('r'),
+            ..
+        }) => (*field, *cursor, *turn) = create_initial_data(),
+        Event::Key(KeyEvent {
             code: KeyCode::Left,
             ..
         }) => {
@@ -273,11 +277,16 @@ fn view<T: std::io::Write>(
     return Ok(());
 }
 
+fn create_initial_data() -> (Field, Position, BorW) {
+    let field = Field::new();
+    let cursor = Position::new(0, 0).unwrap();
+    let turn = BorW::Black;
+    return (field, cursor, turn);
+}
+
 fn main() -> Result<()> {
-    let mut field = Field::new();
-    let mut cursor = Position::new(0, 0).unwrap();
+    let (mut field, mut cursor, mut turn) = create_initial_data();
     let mut end = false;
-    let mut turn = BorW::Black;
     enable_raw_mode()?;
     execute!(std::io::stderr(), Hide, EnterAlternateScreen)?;
     while !end {
