@@ -67,40 +67,36 @@ fn get_another_color(color: BorW) -> BorW {
 fn get_reversable(field: &[[Masu; 8]; 8], point: Position, color: BorW) -> Vec<Position> {
     let mut result = Vec::new();
     let direction = [
-        (-1, -1),
-        (-1, 0),
-        (-1, 1),
-        (0, -1),
-        (0, 1),
-        (1, -1),
-        (1, 0),
-        (1, 1),
+        |x: Position| x.up()?.left(),
+        |x: Position| x.up(),
+        |x: Position| x.up()?.right(),
+        |x: Position| x.down()?.left(),
+        |x: Position| x.down(),
+        |x: Position| x.down()?.right(),
+        |x: Position| x.right(),
+        |x: Position| x.left(),
     ];
-    for i in 0..direction.len() {
-        let mut count = 0;
-        let count = loop {
-            count += 1;
-            let x = point.x as i32 + direction[i].0 * count;
-            let y = point.y as i32 + direction[i].1 * count;
-            match Position::new(x, y) {
-                Err(_) => break 0,
+    for d in direction {
+        let mut kouho = Vec::new();
+        let mut position = point;
+        let add = loop {
+            match d(position) {
+                Err(_) => break false,
                 Ok(p) => {
                     if field[p.x][p.y] == Masu::Empty {
-                        break 0;
+                        break false;
                     }
                     if field[p.x][p.y] == Masu::Putted(color) {
-                        break count;
+                        break true;
                     }
+                    position = p;
+                    kouho.push(p);
                 }
             }
         };
-        for j in 1..count {
-            let x = point.x as i32 + direction[i].0 * j;
-            let y = point.y as i32 + direction[i].1 * j;
-            if let Ok(p) = Position::new(x, y) {
-                result.push(p)
-            }
-        }
+        if add {
+            result.append(&mut kouho);
+        };
     }
     return result;
 }
