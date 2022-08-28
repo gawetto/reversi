@@ -2,7 +2,7 @@ use crossterm::{
     cursor::{Hide, MoveTo, Show},
     event::{read, Event, KeyCode, KeyEvent},
     execute,
-    style::{Color, Print, ResetColor, SetBackgroundColor},
+    style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     Result,
 };
@@ -205,6 +205,14 @@ fn view<T: std::io::Write>(
     turn: BorW,
 ) -> Result<()> {
     execute!(output, MoveTo(0, 0),)?;
+    match turn {
+        BorW::Black => {
+            execute!(output, SetForegroundColor(Color::Black))?;
+        }
+        BorW::White => {
+            execute!(output, SetForegroundColor(Color::White))?;
+        }
+    }
     for i in 0..8 {
         for j in 0..8 {
             let p = Position::new(i, j).unwrap();
@@ -219,7 +227,11 @@ fn view<T: std::io::Write>(
             }
             match field.get(p) {
                 Masu::Empty => {
-                    execute!(output, Print('　'))?;
+                    if check_putable(field, p, turn) {
+                        execute!(output, Print('・'))?;
+                    } else {
+                        execute!(output, Print('　'))?;
+                    }
                 }
                 Masu::Putted(BorW::Black) => {
                     execute!(output, Print('⚫'))?;
