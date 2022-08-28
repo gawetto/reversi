@@ -15,6 +15,29 @@ impl std::fmt::Display for FieldOutError {
     }
 }
 
+struct Field {
+    field: [[Masu; 8]; 8],
+}
+
+impl Field {
+    pub fn new() -> Self {
+        let mut f = Self {
+            field: [[Masu::Empty; 8]; 8],
+        };
+        f.field[3][3] = Masu::Putted(BorW::Black);
+        f.field[4][4] = Masu::Putted(BorW::Black);
+        f.field[3][4] = Masu::Putted(BorW::White);
+        f.field[4][3] = Masu::Putted(BorW::White);
+        f
+    }
+    pub fn get(&self, p: Position) -> Masu {
+        self.field[p.x][p.y]
+    }
+    pub fn set(&mut self, p: Position, masu: Masu) {
+        self.field[p.x][p.y] = masu
+    }
+}
+
 #[derive(Copy, Clone, PartialEq)]
 struct Position {
     x: usize,
@@ -64,7 +87,7 @@ fn get_another_color(color: BorW) -> BorW {
     }
 }
 
-fn get_reversable(field: &[[Masu; 8]; 8], point: Position, color: BorW) -> Vec<Position> {
+fn get_reversable(field: &Field, point: Position, color: BorW) -> Vec<Position> {
     let mut result = Vec::new();
     let direction = [
         |x: Position| x.up()?.left(),
@@ -83,10 +106,10 @@ fn get_reversable(field: &[[Masu; 8]; 8], point: Position, color: BorW) -> Vec<P
             match d(position) {
                 Err(_) => break false,
                 Ok(p) => {
-                    if field[p.x][p.y] == Masu::Empty {
+                    if field.get(p) == Masu::Empty {
                         break false;
                     }
-                    if field[p.x][p.y] == Masu::Putted(color) {
+                    if field.get(p) == Masu::Putted(color) {
                         break true;
                     }
                     position = p;
@@ -101,8 +124,8 @@ fn get_reversable(field: &[[Masu; 8]; 8], point: Position, color: BorW) -> Vec<P
     return result;
 }
 
-fn check_putable(field: &[[Masu; 8]; 8], point: Position, turn: BorW) -> bool {
-    if field[point.x][point.y] != Masu::Empty {
+fn check_putable(field: &Field, point: Position, turn: BorW) -> bool {
+    if field.get(point) != Masu::Empty {
         return false;
     }
     if get_reversable(field, point, turn).len() == 0 {
@@ -111,15 +134,15 @@ fn check_putable(field: &[[Masu; 8]; 8], point: Position, turn: BorW) -> bool {
     return true;
 }
 
-fn auto_reverse(field: &mut [[Masu; 8]; 8], point: Position, turn: BorW) {
+fn auto_reverse(field: &mut Field, point: Position, turn: BorW) {
     get_reversable(field, point, turn)
         .into_iter()
-        .for_each(|p| field[p.x][p.y] = field[point.x][point.y]);
+        .for_each(|p| field.set(p, field.get(point)));
 }
 
 fn input(
     event: Event,
-    field: &mut [[Masu; 8]; 8],
+    field: &mut Field,
     cursor: &mut Position,
     end: &mut bool,
     turn: &mut BorW,
@@ -160,7 +183,7 @@ fn input(
             ..
         }) => {
             if check_putable(&field, *cursor, *turn) {
-                field[cursor.x][cursor.y] = Masu::Putted(*turn);
+                field.set(*cursor, Masu::Putted(*turn));
                 auto_reverse(field, *cursor, *turn);
                 *turn = get_another_color(*turn);
             }
@@ -169,7 +192,7 @@ fn input(
             code: KeyCode::Backspace,
             ..
         }) => {
-            field[cursor.x][cursor.y] = Masu::Empty;
+            field.set(*cursor, Masu::Empty);
         }
         _ => {}
     }
@@ -177,7 +200,7 @@ fn input(
 }
 fn view<T: std::io::Write>(
     output: &mut T,
-    field: &[[Masu; 8]; 8],
+    field: &Field,
     cursor: Position,
     turn: BorW,
 ) -> Result<()> {
@@ -194,7 +217,7 @@ fn view<T: std::io::Write>(
                     execute!(output, SetBackgroundColor(Color::Green))?;
                 }
             }
-            match field[p.x][p.y] {
+            match field.get(p) {
                 Masu::Empty => {
                     execute!(output, Print('　'))?;
                 }
@@ -220,19 +243,11 @@ fn view<T: std::io::Write>(
     return Ok(());
 }
 
-fn init_field(field: &mut [[Masu; 8]; 8]) {
-    field[3][3] = Masu::Putted(BorW::Black);
-    field[4][4] = Masu::Putted(BorW::Black);
-    field[3][4] = Masu::Putted(BorW::White);
-    field[4][3] = Masu::Putted(BorW::White);
-}
-
 fn main() -> Result<()> {
-    let mut field = [[Masu::Empty; 8]; 8];
+    let mut field = Field::new();
     let mut cursor = Position::new(0, 0).unwrap();
     let mut end = false;
     let mut turn = BorW::Black;
-    init_field(&mut field);
     enable_raw_mode()?;
     execute!(std::io::stderr(), Hide, EnterAlternateScreen)?;
     while !end {
@@ -252,14 +267,13 @@ mod tests {
     use std::io::Read;
     #[test]
     fn input_test() {
-        let mut field = [[Masu::Empty; 8]; 8];
-        init_field(&mut field);
+        let mut field = Field::new();
         let mut cursor = Position::new(4, 2).unwrap();
         let mut end = false;
         let mut turn = BorW::Black;
         let enterkey = Event::Key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
         super::input(enterkey, &mut field, &mut cursor, &mut end, &mut turn).unwrap();
-        assert!(field[4][2] == Masu::Putted(BorW::Black));
+        assert!(field.get(Position::new(4, 2).unwrap()) == Masu::Putted(BorW::Black));
         assert!(turn == BorW::White);
         let pkey = Event::Key(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::NONE));
         super::input(pkey, &mut field, &mut cursor, &mut end, &mut turn).unwrap();
@@ -284,20 +298,16 @@ mod tests {
         assert!(cursor.y == 2);
         let backspace = Event::Key(KeyEvent::new(KeyCode::Backspace, KeyModifiers::NONE));
         super::input(backspace, &mut field, &mut cursor, &mut end, &mut turn).unwrap();
-        assert!(field[0][0] == Masu::Empty);
+        assert!(field.get(Position::new(0, 0).unwrap()) == Masu::Empty);
         let esc = Event::Key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
         super::input(esc, &mut field, &mut cursor, &mut end, &mut turn).unwrap();
         assert!(end);
     }
     #[test]
     fn view_test() {
-        let mut field = [[Masu::Empty; 8]; 8];
+        let field = Field::new();
         let cursor = Position::new(0, 0).unwrap();
         let turn = BorW::Black;
-        field[3][3] = Masu::Putted(BorW::Black);
-        field[4][4] = Masu::Putted(BorW::Black);
-        field[3][4] = Masu::Putted(BorW::White);
-        field[4][3] = Masu::Putted(BorW::White);
         let mut buf = Vec::<u8>::new();
         let mut assert_buf = Vec::<u8>::new();
         super::view(&mut buf, &field, cursor, turn).unwrap();
@@ -310,28 +320,26 @@ mod tests {
     }
     #[test]
     fn init_field_test() {
-        let mut field = [[Masu::Empty; 8]; 8];
-        init_field(&mut field);
-        assert!(field[3][3] == Masu::Putted(BorW::Black));
-        assert!(field[4][4] == Masu::Putted(BorW::Black));
-        assert!(field[3][4] == Masu::Putted(BorW::White));
-        assert!(field[4][3] == Masu::Putted(BorW::White));
+        let field = Field::new();
+        assert!(field.get(Position::new(3, 3).unwrap()) == Masu::Putted(BorW::Black));
+        assert!(field.get(Position::new(4, 4).unwrap()) == Masu::Putted(BorW::Black));
+        assert!(field.get(Position::new(3, 4).unwrap()) == Masu::Putted(BorW::White));
+        assert!(field.get(Position::new(4, 3).unwrap()) == Masu::Putted(BorW::White));
     }
     #[test]
     fn check_putable_test() {
-        let mut field = [[Masu::Empty; 8]; 8];
-        init_field(&mut field);
+        let field = Field::new();
         let turn = BorW::Black;
         assert!(!check_putable(&field, Position::new(0, 0).unwrap(), turn));
         assert!(check_putable(&field, Position::new(4, 2).unwrap(), turn));
     }
     #[test]
     fn auto_reverse_test() {
-        let mut field = [[Masu::Empty; 8]; 8];
-        field[3][3] = Masu::Putted(BorW::Black);
-        field[3][4] = Masu::Putted(BorW::White);
-        field[3][5] = Masu::Putted(BorW::Black);
+        let mut field = Field::new();
+        field.set(Position::new(3, 3).unwrap(), Masu::Putted(BorW::Black));
+        field.set(Position::new(3, 4).unwrap(), Masu::Putted(BorW::White));
+        field.set(Position::new(3, 5).unwrap(), Masu::Putted(BorW::Black));
         auto_reverse(&mut field, Position::new(3, 5).unwrap(), BorW::Black);
-        assert!(field[3][4] == Masu::Putted(BorW::Black));
+        assert!(field.get(Position::new(3, 4).unwrap()) == Masu::Putted(BorW::Black));
     }
 }
