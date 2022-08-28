@@ -36,6 +36,16 @@ impl Field {
     pub fn set(&mut self, p: Position, masu: Masu) {
         self.field[p.x][p.y] = masu
     }
+    pub fn count(&self, color: BorW) -> usize {
+        self.field
+            .iter()
+            .flatten()
+            .filter(|x| match x {
+                Masu::Putted(c) => c.eq(&color),
+                _ => false,
+            })
+            .count()
+    }
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -252,6 +262,14 @@ fn view<T: std::io::Write>(
             execute!(output, Print("White Turn\n"))?;
         }
     }
+    execute!(
+        output,
+        Print(format!(
+            "⚫:{:>2} ⚪:{:>2}",
+            field.count(BorW::Black),
+            field.count(BorW::White),
+        ))
+    )?;
     return Ok(());
 }
 
