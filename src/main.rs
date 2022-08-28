@@ -372,4 +372,10 @@ mod tests {
         auto_reverse(&mut field, Position::new(3, 5).unwrap(), BorW::Black);
         assert!(field.get(Position::new(3, 4).unwrap()) == Masu::Putted(BorW::Black));
     }
+    #[test]
+    fn count_test() {
+        let mut field = Field::new();
+        field.set(Position::new(0, 0).unwrap(), Masu::Putted(BorW::Black));
+        assert!(field.count(BorW::Black) == 3)
+    }
 }
