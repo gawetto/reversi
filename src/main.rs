@@ -10,22 +10,28 @@ use crossterm::{
 #[derive(Copy, Clone, PartialEq)]
 enum Masu {
     Empty,
+    Putted(BorW),
+}
+
+#[derive(Copy, Clone, PartialEq)]
+enum BorW {
     Black,
     White,
 }
 
-#[derive(Copy, Clone, PartialEq)]
-enum Turn {
-    Black,
-    White,
+fn get_another_color(color: BorW) -> BorW {
+    match color {
+        BorW::Black => BorW::White,
+        BorW::White => BorW::Black,
+    }
 }
 
 fn get_reversable(
     field: &[[Masu; 8]; 8],
-    point: &(usize, usize),
-    color: &Masu,
+    point: (usize, usize),
+    color: BorW,
 ) -> Vec<(usize, usize)> {
-    let mut result: Vec<(usize, usize)> = vec![];
+    let mut result = Vec::new();
     let direction = [
         (-1, -1),
         (-1, 0),
@@ -51,7 +57,7 @@ fn get_reversable(
             if field[x as usize][y as usize] == Masu::Empty {
                 break 0;
             }
-            if field[x as usize][y as usize] == *color {
+            if field[x as usize][y as usize] == Masu::Putted(color) {
                 break count;
             }
         };
@@ -64,22 +70,18 @@ fn get_reversable(
     return result;
 }
 
-fn check_putable(field: &[[Masu; 8]; 8], point: &(usize, usize), turn: &Turn) -> bool {
+fn check_putable(field: &[[Masu; 8]; 8], point: (usize, usize), turn: BorW) -> bool {
     if field[point.0][point.1] != Masu::Empty {
         return false;
     }
-    let check_color = match turn {
-        Turn::Black => Masu::Black,
-        Turn::White => Masu::White,
-    };
-    if get_reversable(field, point, &check_color).len() == 0 {
+    if get_reversable(field, point, turn).len() == 0 {
         return false;
     }
     return true;
 }
 
-fn auto_reverse(field: &mut [[Masu; 8]; 8], point: (usize, usize)) {
-    get_reversable(field, &point, &field[point.0][point.1])
+fn auto_reverse(field: &mut [[Masu; 8]; 8], point: (usize, usize), turn: BorW) {
+    get_reversable(field, point, turn)
         .into_iter()
         .for_each(|x| field[x.0][x.1] = field[point.0][point.1]);
 }
@@ -89,7 +91,7 @@ fn input(
     field: &mut [[Masu; 8]; 8],
     cursor: &mut (usize, usize),
     end: &mut bool,
-    turn: &mut Turn,
+    turn: &mut BorW,
 ) -> Result<()> {
     match event {
         Event::Key(KeyEvent {
@@ -98,14 +100,7 @@ fn input(
         Event::Key(KeyEvent {
             code: KeyCode::Char('p'),
             ..
-        }) => match turn {
-            Turn::Black => {
-                *turn = Turn::White;
-            }
-            Turn::White => {
-                *turn = Turn::Black;
-            }
-        },
+        }) => *turn = get_another_color(*turn),
         Event::Key(KeyEvent {
             code: KeyCode::Left,
             ..
@@ -141,18 +136,10 @@ fn input(
             code: KeyCode::Enter,
             ..
         }) => {
-            if check_putable(&field, &cursor, &turn) {
-                match turn {
-                    Turn::Black => {
-                        field[cursor.0][cursor.1] = Masu::Black;
-                        *turn = Turn::White;
-                    }
-                    Turn::White => {
-                        field[cursor.0][cursor.1] = Masu::White;
-                        *turn = Turn::Black;
-                    }
-                }
-                auto_reverse(field, *cursor)
+            if check_putable(&field, *cursor, *turn) {
+                field[cursor.0][cursor.1] = Masu::Putted(*turn);
+                auto_reverse(field, *cursor, *turn);
+                *turn = get_another_color(*turn);
             }
         }
         Event::Key(KeyEvent {
@@ -168,8 +155,8 @@ fn input(
 fn view<T: std::io::Write>(
     output: &mut T,
     field: &[[Masu; 8]; 8],
-    cursor: &(usize, usize),
-    turn: &Turn,
+    cursor: (usize, usize),
+    turn: BorW,
 ) -> Result<()> {
     execute!(output, MoveTo(0, 0),)?;
     for i in 0..8 {
@@ -187,10 +174,10 @@ fn view<T: std::io::Write>(
                 Masu::Empty => {
                     execute!(output, Print('　'))?;
                 }
-                Masu::Black => {
+                Masu::Putted(BorW::Black) => {
                     execute!(output, Print('⚫'))?;
                 }
-                Masu::White => {
+                Masu::Putted(BorW::White) => {
                     execute!(output, Print('⚪'))?;
                 }
             }
@@ -199,10 +186,10 @@ fn view<T: std::io::Write>(
     }
     execute!(output, ResetColor)?;
     match turn {
-        Turn::Black => {
+        BorW::Black => {
             execute!(output, Print("Black Turn\n"))?;
         }
-        Turn::White => {
+        BorW::White => {
             execute!(output, Print("White Turn\n"))?;
         }
     }
@@ -210,22 +197,22 @@ fn view<T: std::io::Write>(
 }
 
 fn init_field(field: &mut [[Masu; 8]; 8]) {
-    field[3][3] = Masu::Black;
-    field[4][4] = Masu::Black;
-    field[3][4] = Masu::White;
-    field[4][3] = Masu::White;
+    field[3][3] = Masu::Putted(BorW::Black);
+    field[4][4] = Masu::Putted(BorW::Black);
+    field[3][4] = Masu::Putted(BorW::White);
+    field[4][3] = Masu::Putted(BorW::White);
 }
 
 fn main() -> Result<()> {
     let mut field = [[Masu::Empty; 8]; 8];
     let mut cursor = (0, 0);
     let mut end = false;
-    let mut turn = Turn::Black;
+    let mut turn = BorW::Black;
     init_field(&mut field);
     enable_raw_mode()?;
     execute!(std::io::stderr(), Hide, EnterAlternateScreen)?;
     while !end {
-        view(&mut std::io::stderr(), &field, &cursor, &turn)?;
+        view(&mut std::io::stderr(), &field, cursor, turn)?;
         input(read()?, &mut field, &mut cursor, &mut end, &mut turn)?;
     }
     execute!(std::io::stderr(), Show, LeaveAlternateScreen)?;
@@ -245,16 +232,16 @@ mod tests {
         init_field(&mut field);
         let mut cursor = (4, 2);
         let mut end = false;
-        let mut turn = Turn::Black;
+        let mut turn = BorW::Black;
         let enterkey = Event::Key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
         super::input(enterkey, &mut field, &mut cursor, &mut end, &mut turn).unwrap();
-        assert!(field[4][2] == Masu::Black);
-        assert!(turn == Turn::White);
+        assert!(field[4][2] == Masu::Putted(BorW::Black));
+        assert!(turn == BorW::White);
         let pkey = Event::Key(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::NONE));
         super::input(pkey, &mut field, &mut cursor, &mut end, &mut turn).unwrap();
-        assert!(turn == Turn::Black);
+        assert!(turn == BorW::Black);
         super::input(pkey, &mut field, &mut cursor, &mut end, &mut turn).unwrap();
-        assert!(turn == Turn::White);
+        assert!(turn == BorW::White);
         let rightkey = Event::Key(KeyEvent::new(KeyCode::Right, KeyModifiers::NONE));
         super::input(rightkey, &mut field, &mut cursor, &mut end, &mut turn).unwrap();
         assert!(cursor.0 == 4);
@@ -282,14 +269,14 @@ mod tests {
     fn view_test() {
         let mut field = [[Masu::Empty; 8]; 8];
         let cursor = (0, 0);
-        let turn = Turn::Black;
-        field[3][3] = Masu::Black;
-        field[4][4] = Masu::Black;
-        field[3][4] = Masu::White;
-        field[4][3] = Masu::White;
+        let turn = BorW::Black;
+        field[3][3] = Masu::Putted(BorW::Black);
+        field[4][4] = Masu::Putted(BorW::Black);
+        field[3][4] = Masu::Putted(BorW::White);
+        field[4][3] = Masu::Putted(BorW::White);
         let mut buf = Vec::<u8>::new();
         let mut assert_buf = Vec::<u8>::new();
-        super::view(&mut buf, &field, &cursor, &turn).unwrap();
+        super::view(&mut buf, &field, cursor, turn).unwrap();
         //let mut f = File::create("testdata/initview").unwrap();
         //use std::io::Write;
         //f.write_all(buf.into_boxed_slice().as_ref()).unwrap();
@@ -301,26 +288,26 @@ mod tests {
     fn init_field_test() {
         let mut field = [[Masu::Empty; 8]; 8];
         init_field(&mut field);
-        assert!(field[3][3] == Masu::Black);
-        assert!(field[4][4] == Masu::Black);
-        assert!(field[3][4] == Masu::White);
-        assert!(field[4][3] == Masu::White);
+        assert!(field[3][3] == Masu::Putted(BorW::Black));
+        assert!(field[4][4] == Masu::Putted(BorW::Black));
+        assert!(field[3][4] == Masu::Putted(BorW::White));
+        assert!(field[4][3] == Masu::Putted(BorW::White));
     }
     #[test]
     fn check_putable_test() {
         let mut field = [[Masu::Empty; 8]; 8];
         init_field(&mut field);
-        let turn = Turn::Black;
-        assert!(!check_putable(&field, &(0, 0), &turn));
-        assert!(check_putable(&field, &(4, 2), &turn));
+        let turn = BorW::Black;
+        assert!(!check_putable(&field, (0, 0), turn));
+        assert!(check_putable(&field, (4, 2), turn));
     }
     #[test]
     fn auto_reverse_test() {
         let mut field = [[Masu::Empty; 8]; 8];
-        field[3][3] = Masu::Black;
-        field[3][4] = Masu::White;
-        field[3][5] = Masu::Black;
-        auto_reverse(&mut field, (3, 5));
-        assert!(field[3][4] == Masu::Black);
+        field[3][3] = Masu::Putted(BorW::Black);
+        field[3][4] = Masu::Putted(BorW::White);
+        field[3][5] = Masu::Putted(BorW::Black);
+        auto_reverse(&mut field, (3, 5), BorW::Black);
+        assert!(field[3][4] == Masu::Putted(BorW::Black));
     }
 }
