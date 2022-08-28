@@ -19,6 +19,12 @@ struct Field {
     field: [[Masu; 8]; 8],
 }
 
+enum GameResult {
+    Win(BorW),
+    Draw,
+    Playing,
+}
+
 impl Field {
     pub fn new() -> Self {
         let mut f = Self {
@@ -45,6 +51,31 @@ impl Field {
                 _ => false,
             })
             .count()
+    }
+    pub fn puttable(&self, color: BorW) -> bool {
+        for i in 0..8 {
+            for j in 0..8 {
+                let p = Position::new(i, j).unwrap();
+                if check_putable(self, p, color) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    pub fn get_gameresult(&self) -> GameResult {
+        if self.puttable(BorW::White) || self.puttable(BorW::Black) {
+            return GameResult::Playing;
+        }
+        let bcount = self.count(BorW::Black);
+        let wcount = self.count(BorW::White);
+        if bcount == wcount {
+            GameResult::Draw
+        } else if bcount > wcount {
+            GameResult::Win(BorW::Black)
+        } else {
+            GameResult::Win(BorW::White)
+        }
     }
 }
 
@@ -200,6 +231,9 @@ fn input(
                 field.set(*cursor, Masu::Putted(*turn));
                 auto_reverse(field, *cursor, *turn);
                 *turn = get_another_color(*turn);
+                if !field.puttable(*turn) {
+                    *turn = get_another_color(*turn);
+                }
             }
         }
         Event::Key(KeyEvent {
@@ -269,11 +303,25 @@ fn view<T: std::io::Write>(
     execute!(
         output,
         Print(format!(
-            "⚫:{:>2} ⚪:{:>2}",
+            "⚫:{:>2} ⚪:{:>2}\n",
             field.count(BorW::Black),
             field.count(BorW::White),
         ))
     )?;
+    match field.get_gameresult() {
+        GameResult::Playing => {
+            execute!(output, Print(format!("                    ",)))?;
+        }
+        GameResult::Draw => {
+            execute!(output, Print(format!("Game Result is Draw ",)))?;
+        }
+        GameResult::Win(BorW::Black) => {
+            execute!(output, Print(format!("Winner is Black      ")))?;
+        }
+        GameResult::Win(BorW::White) => {
+            execute!(output, Print(format!("Winner is White      ")))?;
+        }
+    }
     return Ok(());
 }
 
