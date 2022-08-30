@@ -1,0 +1,29 @@
+[package]
+name = "reversi_gui"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reversi_core = {path = "../reversi_core"}
+wasm-bindgen = "0.2.70"
+js-sys = "0.3.47"
+
+[dependencies.web-sys]
+version = "0.3.59"
+features = [
+  'console',
+  'Window',
+  'Document',
+  'Element',
+  'HtmlElement',
+  'HtmlCanvasElement',
+  'CanvasRenderingContext2d',
+  'CssStyleDeclaration',
+  'Node',
+  'EventTarget',
+  'KeyboardEvent'
+]
+
+
