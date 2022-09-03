@@ -23,7 +23,9 @@ features = [
   'CssStyleDeclaration',
   'Node',
   'EventTarget',
-  'KeyboardEvent'
+  'KeyboardEvent',
+  'DomRect',
+  'MouseEvent',
 ]
 
 

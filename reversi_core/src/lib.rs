@@ -87,16 +87,16 @@ impl Position {
         })
     }
     pub fn up(self) -> std::result::Result<Self, FieldOutError> {
-        Self::new(self.x as i32 - 1, self.y as i32)
-    }
-    pub fn down(self) -> std::result::Result<Self, FieldOutError> {
-        Self::new(self.x as i32 + 1, self.y as i32)
-    }
-    pub fn left(self) -> std::result::Result<Self, FieldOutError> {
         Self::new(self.x as i32, self.y as i32 - 1)
     }
-    pub fn right(self) -> std::result::Result<Self, FieldOutError> {
+    pub fn down(self) -> std::result::Result<Self, FieldOutError> {
         Self::new(self.x as i32, self.y as i32 + 1)
+    }
+    pub fn left(self) -> std::result::Result<Self, FieldOutError> {
+        Self::new(self.x as i32 - 1, self.y as i32)
+    }
+    pub fn right(self) -> std::result::Result<Self, FieldOutError> {
+        Self::new(self.x as i32 + 1, self.y as i32)
     }
     pub fn x(self) -> usize {
         self.x

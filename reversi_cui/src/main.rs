@@ -91,7 +91,7 @@ fn view<T: std::io::Write>(
     }
     for i in 0..8 {
         for j in 0..8 {
-            let p = Position::new(i, j).unwrap();
+            let p = Position::new(j, i).unwrap();
             if cursor.eq(&p) {
                 execute!(output, SetBackgroundColor(Color::Grey))?;
             } else {
@@ -190,16 +190,16 @@ mod tests {
         assert!(turn == BorW::White);
         let rightkey = Event::Key(KeyEvent::new(KeyCode::Right, KeyModifiers::NONE));
         super::input(rightkey, &mut field, &mut cursor, &mut end, &mut turn).unwrap();
-        assert!(cursor.x() == 4);
-        assert!(cursor.y() == 3);
+        assert!(cursor.x() == 5);
+        assert!(cursor.y() == 2);
         let downkey = Event::Key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE));
         super::input(downkey, &mut field, &mut cursor, &mut end, &mut turn).unwrap();
         assert!(cursor.x() == 5);
         assert!(cursor.y() == 3);
         let leftkey = Event::Key(KeyEvent::new(KeyCode::Left, KeyModifiers::NONE));
         super::input(leftkey, &mut field, &mut cursor, &mut end, &mut turn).unwrap();
-        assert!(cursor.x() == 5);
-        assert!(cursor.y() == 2);
+        assert!(cursor.x() == 4);
+        assert!(cursor.y() == 3);
         let upkey = Event::Key(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE));
         super::input(upkey, &mut field, &mut cursor, &mut end, &mut turn).unwrap();
         assert!(cursor.x() == 4);
