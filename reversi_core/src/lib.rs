@@ -6,6 +6,23 @@ impl std::fmt::Display for FieldOutError {
     }
 }
 
+pub struct ReversiData {
+    pub field: Field,
+    pub cursor: Position,
+    pub turn: BorW,
+}
+
+impl ReversiData {
+    pub fn new() -> Self {
+        let (field, cursor, turn) = create_initial_data();
+        return Self {
+            field,
+            cursor,
+            turn,
+        };
+    }
+}
+
 pub struct Field {
     field: [[Masu; 8]; 8],
 }
