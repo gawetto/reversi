@@ -1,0 +1,15 @@
+[package]
+name = "reversi_server"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reversi_core = {path = "../reversi_core"}
+tokio-tungstenite = {version="*", features = ["connect","stream"]}
+tungstenite = "*"
+tokio = { version = "1", features = ["full"] }
+futures-channel = "0.3"
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+serde_json = "1.0.85"

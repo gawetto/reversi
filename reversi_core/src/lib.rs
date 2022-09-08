@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, Clone)]
 pub struct FieldOutError;
 impl std::fmt::Display for FieldOutError {
@@ -6,6 +8,7 @@ impl std::fmt::Display for FieldOutError {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct ReversiData {
     pub field: Field,
     pub cursor: Position,
@@ -23,6 +26,7 @@ impl ReversiData {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Field {
     field: [[Masu; 8]; 8],
 }
@@ -87,7 +91,7 @@ impl Field {
     }
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Position {
     x: usize,
     y: usize,
@@ -123,13 +127,13 @@ impl Position {
     }
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Masu {
     Empty,
     Putted(BorW),
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum BorW {
     Black,
     White,
