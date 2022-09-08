@@ -27,9 +27,6 @@ async fn handle_connection(
     addr: SocketAddr,
     reversi_data: Arc<Mutex<ReversiData>>,
 ) {
-    //let ws_stream = tokio_tungstenite::accept_async(raw_stream)
-    //    .await
-    //    .expect("Error during the websocket handshake occurred");
     let (outgoing, incoming) = tokio_tungstenite::accept_async(raw_stream)
         .await
         .expect("Error during the websocket handshake occurred")
@@ -40,7 +37,6 @@ async fn handle_connection(
     send_reversi_data(&tx, &*reversi_data.lock().unwrap());
     senders.lock().unwrap().insert(addr, tx);
 
-    //let (outgoing, incoming) = ws_stream.split();
     let broadcast_incoming = incoming.try_for_each(|msg| {
         println!(
             "Received a message from {}: {}",
