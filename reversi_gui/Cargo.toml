@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 reversi_core = {path = "../reversi_core"}
+reversi_wasm_common = {path = "../reversi_wasm_common"}
 wasm-bindgen = "0.2.70"
 js-sys = "0.3.47"
 

@@ -206,6 +206,17 @@ pub fn create_initial_data() -> (Field, Position, BorW) {
     return (field, cursor, turn);
 }
 
+pub fn try_put(data: &mut ReversiData) {
+    if check_putable(&data.field, data.cursor, data.turn) {
+        data.field.set(data.cursor, Masu::Putted(data.turn));
+        auto_reverse(&mut data.field, data.cursor, data.turn);
+        data.turn = get_another_color(data.turn);
+        if !data.field.puttable(data.turn) {
+            data.turn = get_another_color(data.turn);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

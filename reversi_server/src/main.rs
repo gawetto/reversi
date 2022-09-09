@@ -50,15 +50,7 @@ async fn handle_connection(
             Err(_) => return future::ok(()),
         }
         reversi_data.cursor = cursor;
-        let turn = reversi_data.turn;
-        if check_putable(&reversi_data.field, reversi_data.cursor, reversi_data.turn) {
-            reversi_data.field.set(cursor, Masu::Putted(turn));
-            auto_reverse(&mut reversi_data.field, cursor, turn);
-            reversi_data.turn = get_another_color(reversi_data.turn);
-            if !reversi_data.field.puttable(reversi_data.turn) {
-                reversi_data.turn = get_another_color(reversi_data.turn);
-            }
-        }
+        try_put(&mut *reversi_data);
         senders
             .lock()
             .unwrap()

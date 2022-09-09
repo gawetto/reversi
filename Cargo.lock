@@ -416,6 +416,7 @@ dependencies = [
  "http",
  "js-sys",
  "reversi_core",
+ "reversi_wasm_common",
  "serde_json",
  "tungstenite",
  "url",
@@ -444,6 +445,7 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "reversi_core",
+ "reversi_wasm_common",
  "wasm-bindgen",
  "web-sys",
 ]
@@ -459,6 +461,16 @@ dependencies = [
  "tokio",
  "tokio-tungstenite",
  "tungstenite",
+]
+
+[[package]]
+name = "reversi_wasm_common"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "reversi_core",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]
