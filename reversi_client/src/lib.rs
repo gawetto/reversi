@@ -1,11 +1,13 @@
 use reversi_core::*;
 use reversi_wasm_common::*;
 use wasm_bindgen::closure::Closure;
+use wasm_bindgen::prelude::*;
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::HtmlCanvasElement;
 use web_sys::{MessageEvent, WebSocket};
 
-fn main() -> Result<(), JsValue> {
+#[wasm_bindgen(start)]
+pub fn run() -> Result<(), JsValue> {
     let document = web_sys::window().unwrap().document().unwrap();
     let body = document.body().unwrap();
     let canvas = document

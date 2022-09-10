@@ -5,6 +5,9 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 reversi_core = {path = "../reversi_core"}
 reversi_wasm_common = {path = "../reversi_wasm_common"}
@@ -35,3 +38,6 @@ features = [
   'WebSocket',
   'MessageEvent',
 ]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.2"
