@@ -1,2 +1,2 @@
 [workspace]
-members = ["reversi_client","reversi_server","reversi_cui","reversi_core","reversi_gui","reversi_wasm_common"]
+members = ["reversi_client","reversi_server","reversi_cui","reversi_core","reversi_gui","reversi_wasm_common","reversi_message"]

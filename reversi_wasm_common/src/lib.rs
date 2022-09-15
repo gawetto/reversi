@@ -4,8 +4,8 @@ use web_sys::CanvasRenderingContext2d;
 use web_sys::HtmlCanvasElement;
 
 pub fn mouseinput(e: web_sys::MouseEvent) -> std::result::Result<Position, FieldOutError> {
-    let x = (e.page_x() as f64 / 60.0).floor() as i32;
-    let y = (e.page_y() as f64 / 60.0).floor() as i32;
+    let x = (e.offset_x() as f64 / 60.0).floor() as i32;
+    let y = (e.offset_y() as f64 / 60.0).floor() as i32;
     Position::new(x, y)
 }
 

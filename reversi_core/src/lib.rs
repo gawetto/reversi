@@ -8,7 +8,7 @@ impl std::fmt::Display for FieldOutError {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ReversiData {
     pub field: Field,
     pub cursor: Position,
@@ -26,7 +26,7 @@ impl ReversiData {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Field {
     field: [[Masu; 8]; 8],
 }
